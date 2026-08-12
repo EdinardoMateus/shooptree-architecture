@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+
+  product-service:
+    build: ./product-service
+    ports:
+      - "8001:8000"
+    
+  payment-service:
+    build: ./payment-service
+    ports:
+      - "8002:8000"
+
+  notification-service:
+    build: ./notification-service
+    ports:
+      - "8003:8000"
+  
