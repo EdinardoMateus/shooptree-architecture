@@ -1,29 +1,43 @@
-integration:
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v3
+name: Docker Build and Test
 
-    - name: Build and start containers
-      run: |
-        docker-compose up -d --build
-        sleep 10  # aguarda serviços iniciarem
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
-    - name: Test endpoints
-      run: |
-        curl -f http://localhost:8001/produtos || exit 1
-        curl -f http://localhost:8002/pagamentos || exit 1
-        curl -f http://localhost:8003/ || exit 1
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
 
-    - name: Test event-driven flow
-      run: |
-        # Cria uma compra via POST
-        curl -X POST "http://localhost:8001/comprar/1?quantity=2" || exit 1
-        # Aguarda processamento dos eventos
-        sleep 5
-        # (opcional) verifique logs dos containers
-        docker logs payment-service | grep "Pagamento processado"
-        docker logs notification-service | grep "E-mail enviado"
+      - name: Build Docker images
+        run: docker-compose build
 
-    - name: Stop containers
-      if: always()
-      run: docker-compose down
+      - name: Start services
+        run: docker-compose up -d
+
+      - name: Wait for services
+        run: sleep 10
+
+      - name: Test product service
+        run: curl -f http://localhost:8001/produtos || exit 1
+
+      - name: Test payment service
+        run: curl -f http://localhost:8002/pagamentos || exit 1
+
+      - name: Test notification service
+        run: curl -f http://localhost:8003/ || exit 1
+
+      - name: Test event flow
+        run: |
+          curl -X POST "http://localhost:8001/comprar/1?quantity=2" || exit 1
+          sleep 5
+          # Opcional: verifique logs (pode usar docker logs)
+          docker logs payment-service | grep "Pagamento processado"
+          docker logs notification-service | grep "E-mail enviado"
+
+      - name: Stop services
+        if: always()
+        run: docker-compose down
