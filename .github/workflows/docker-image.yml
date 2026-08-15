@@ -1,18 +1,29 @@
-name: Docker Image CI
+integration:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v3
 
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    - name: Build and start containers
+      run: |
+        docker-compose up -d --build
+        sleep 10  # aguarda serviços iniciarem
 
-jobs:
+    - name: Test endpoints
+      run: |
+        curl -f http://localhost:8001/produtos || exit 1
+        curl -f http://localhost:8002/pagamentos || exit 1
+        curl -f http://localhost:8003/ || exit 1
 
-  build:
+    - name: Test event-driven flow
+      run: |
+        # Cria uma compra via POST
+        curl -X POST "http://localhost:8001/comprar/1?quantity=2" || exit 1
+        # Aguarda processamento dos eventos
+        sleep 5
+        # (opcional) verifique logs dos containers
+        docker logs payment-service | grep "Pagamento processado"
+        docker logs notification-service | grep "E-mail enviado"
 
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+    - name: Stop containers
+      if: always()
+      run: docker-compose down
