@@ -1,7 +1,7 @@
 # ShoopTree - Modernização Arquitetural
 
 ## Descrição
-Projeto de modernização da plataforma de e-commerce ShoopTree, migrando do monolito para microsserviços com comunicação orientada a eventos (Kafka).
+Projeto de modernização da plataforma de e-commerce ShoopTree, migrando do monolito para microsserviços.
 
 ## Arquitetura
 - **Product Service**: Gerencia catálogo e publica eventos de compra.
