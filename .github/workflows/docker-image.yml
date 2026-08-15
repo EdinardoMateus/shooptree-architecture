@@ -1,22 +1,24 @@
-name: Docker Build and Test
-
-on:
-  push:
-    branches: [ main, master ]
-
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [product-service, payment-service, notification-service]
     steps:
       - uses: actions/checkout@v3
-      - name: Build and start
-        run: docker compose up -d --build
-      - name: Wait
-        run: sleep 15
-      - name: Test endpoints
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        working-directory: ${{ matrix.service }}
         run: |
-          curl -f http://localhost:8001/produtos
-          curl -f http://localhost:8002/pagamentos
-          curl -f http://localhost:8003/
-      - name: Shutdown
-        run: docker compose down
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install httpx pytest pytest-cov
+      
+      - name: Run tests
+        working-directory: ${{ matrix.service }}
+        run: pytest tests/ -v --cov=app --cov-report=xml
