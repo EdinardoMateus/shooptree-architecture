@@ -28,15 +28,15 @@ jobs:
         run: curl -f http://localhost:8002/pagamentos || exit 1
 
       - name: Test notification service
-        run: curl -f http://localhost:8003/ || exit 1
+        run: curl -f http://localhost:8003/ || exit 1     
 
      - name: Test event flow
-  run: |
-    docker ps  # List all running containers to see their names
-    curl -X POST "http://localhost:8001/comprar/1?quantity=2" || exit 1
-    sleep 5
-    docker logs payment-service | grep "Pagamento processado"
-    docker logs notification-service | grep "E-mail enviado"
+      run: |
+      docker ps  # List all running containers to see their names
+      curl -X POST "http://localhost:8001/comprar/1?quantity=2" || exit 1
+      sleep 5
+      docker logs payment-service | grep "Pagamento processado"
+      docker logs notification-service | grep "E-mail enviado"
 
       - name: Stop services
         if: always()
