@@ -1,0 +1,43 @@
+name: Docker Build and Test
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build Docker images
+        run: docker-compose build
+
+      - name: Start services
+        run: docker-compose up -d
+
+      - name: Wait for services
+        run: sleep 10
+
+      - name: Test product service
+        run: curl -f http://localhost:8001/produtos || exit 1
+
+      - name: Test payment service
+        run: curl -f http://localhost:8002/pagamentos || exit 1
+
+      - name: Test notification service
+        run: curl -f http://localhost:8003/ || exit 1
+
+      - name: Test event flow
+        run: |
+            docker ps  # List all running containers to see their names
+            curl -X POST "http://localhost:8001/comprar/1?quantity=2" || exit 1
+            sleep 5
+            docker logs payment-service | grep "Pagamento processado"
+            docker logs notification-service | grep "E-mail enviado"
+            
+      - name: Stop services
+        if: always()
+        run: docker-compose down

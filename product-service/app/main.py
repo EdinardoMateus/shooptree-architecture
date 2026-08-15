@@ -7,7 +7,10 @@ app = FastAPI(title="Product Service")
 
 products_db = [
     Product(id=1, name="Notebook", price=4500.00),
-    Product(id=2, name="Mouse", price=150.00)
+    Product(id=2, name="Mouse", price=150.00),
+    Product(id=3, name="Smarttv", price=2700.00),
+    Product(id=4, name="Desktop", price=3800.00),
+    Product(id=5, name="IPHONE", price=6500.00)
 ]
 
 @app.get("/produtos")
